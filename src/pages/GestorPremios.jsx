@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+// Importación de los 4 modales desde la carpeta de componentes del Gestor de Premios
 import AgregarPremioModal from '../components/GestorPremios/AgregarPremioModal';
 import EditarPremioModal from '../components/GestorPremios/EditarPremioModal';
 import EliminarPremioModal from '../components/GestorPremios/EliminarPremioModal';
 import VerPremioModal from '../components/GestorPremios/VerPremioModal';
 
+// Catálogo inicial de datos de prueba para demostración en ULima Recicla
 const PREMIOS_INICIALES = [
   {
     id: 1,
@@ -53,27 +56,39 @@ const PREMIOS_INICIALES = [
   }
 ];
 
-export default function Premios() {
+/**
+ * Componente Principal de la Página "Gestión de Premios".
+ * Administra el estado global del catálogo, métricas superiores y renderizado condicional de modales.
+ */
+export default function GestorPremios() {
   const navigate = useNavigate();
+
+  // Estado que contiene la lista activa de premios
   const [premios, setPremios] = useState(PREMIOS_INICIALES);
+
+  // Estados para controlar los filtros de la tabla
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
 
+  // Estados para controlar la apertura y los datos cargados en cada modal
   const [modalAgregar, setModalAgregar] = useState(false);
   const [modalEditar, setModalEditar] = useState(null);
   const [modalEliminar, setModalEliminar] = useState(null);
   const [modalVer, setModalVer] = useState(null);
 
+  // Lógica de filtrado en tiempo real por búsqueda de nombre y selección de estado
   const premiosFiltrados = premios.filter((item) => {
-    const coincideNombre = item.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideNombre = (item.nombre || '').toLowerCase().includes(busqueda.toLowerCase().trim());
     const coincideEstado = filtroEstado === 'Todos' || item.estado === filtroEstado;
     return coincideNombre && coincideEstado;
   });
 
+  // Cálculos matemáticos para las tarjetas de métricas en tiempo real
   const totalCatalog = premios.length;
   const totalActivos = premios.filter((p) => p.estado === 'Activo').length;
-  const totalUnidades = premios.reduce((acc, p) => acc + Number(p.stock), 0);
+  const totalUnidades = premios.reduce((acc, p) => acc + Number(p.stock || 0), 0);
 
+  // Funciones para procesar las acciones CRUD de los modales
   const handleSaveAgregar = (nuevoPremio) => {
     setPremios([...premios, { id: Date.now(), ...nuevoPremio }]);
     setModalAgregar(false);
@@ -93,8 +108,11 @@ export default function Premios() {
 
   return (
     <div className="flex min-h-screen bg-[#f6f7f6] font-sans text-gray-800">
+      
+      {/* BARRA LATERAL IZQUIERDA (SIDEBAR) */}
       <aside className="w-64 bg-[#121c17] text-white flex flex-col justify-between p-5 min-h-screen shrink-0">
         <div>
+          {/* Logo e identificación de la universidad */}
           <div className="flex items-center gap-3 mb-8 px-2">
             <div className="bg-[#f05a28] p-2 rounded-xl">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,6 +129,7 @@ export default function Premios() {
             Administración
           </div>
 
+          {/* Menú de Navegación entre páginas */}
           <nav className="space-y-1">
             <Link
               to="/premios"
@@ -144,6 +163,7 @@ export default function Premios() {
           </nav>
         </div>
 
+        {/* Sección inferior del Sidebar */}
         <div className="space-y-4">
           <div className="bg-[#1b2721] p-4 rounded-2xl border border-white/5">
             <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center mb-2">
@@ -167,7 +187,10 @@ export default function Premios() {
         </div>
       </aside>
 
+      {/* ÁREA DE CONTENIDO PRINCIPAL */}
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        
+        {/* Encabezado superior / Breadcrumbs y Usuario */}
         <header className="bg-white border-b border-gray-100 px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
             <span>Administración</span>
@@ -192,6 +215,8 @@ export default function Premios() {
         </header>
 
         <div className="p-8 max-w-7xl w-full mx-auto space-y-6">
+          
+          {/* Título de la vista y botón de Agregar Premio */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#f05a28]">
@@ -205,12 +230,13 @@ export default function Premios() {
 
             <button
               onClick={() => setModalAgregar(true)}
-              className="bg-[#f05a28] hover:bg-[#d94d1f] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center gap-2 shadow-sm self-start md:self-auto"
+              className="bg-[#f05a28] hover:bg-[#d94d1f] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center gap-2 shadow-sm self-start md:self-auto cursor-pointer"
             >
               <span className="text-base font-bold">+</span> Agregar premio
             </button>
           </div>
 
+          {/* Tarjetas de Métricas en Tiempo Real */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm">
               <div className="w-12 h-12 bg-[#fef2e8] rounded-xl flex items-center justify-center shrink-0">
@@ -249,6 +275,7 @@ export default function Premios() {
             </div>
           </div>
 
+          {/* Tabla principal con Filtros y Buscador */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row items-center justify-between gap-3">
               <div className="relative w-full md:w-80">
@@ -267,7 +294,7 @@ export default function Premios() {
               <select
                 value={filtroEstado}
                 onChange={(e) => setFiltroEstado(e.target.value)}
-                className="w-full md:w-48 px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] text-gray-600 bg-white"
+                className="w-full md:w-48 px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] text-gray-600 bg-white cursor-pointer"
               >
                 <option value="Todos">Todos los estados</option>
                 <option value="Activo">Activo</option>
@@ -318,8 +345,10 @@ export default function Premios() {
                       <td className="py-3.5 px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            type="button"
                             onClick={() => setModalVer(premio)}
-                            className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors cursor-pointer"
+                            title="Ver detalles"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -327,16 +356,20 @@ export default function Premios() {
                             </svg>
                           </button>
                           <button
+                            type="button"
                             onClick={() => setModalEditar(premio)}
-                            className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors cursor-pointer"
+                            title="Editar premio"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
                           </button>
                           <button
+                            type="button"
                             onClick={() => setModalEliminar(premio)}
-                            className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                            title="Eliminar premio"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -363,6 +396,7 @@ export default function Premios() {
         </div>
       </main>
 
+      {/* RENDERIZADO CONDICIONAL DE MODALES */}
       {modalAgregar && (
         <AgregarPremioModal
           onClose={() => setModalAgregar(false)}

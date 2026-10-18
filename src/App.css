@@ -1,3 +1,7 @@
+/* ==========================================================================
+   ESTILOS EXISTENTES EN EL PROYECTO (Mantenidos para no afectar a otros integrantes)
+   ========================================================================== */
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
@@ -181,4 +185,35 @@
     right: 0;
     border-right-color: var(--border);
   }
+}
+
+/* ==========================================================================
+   ESTILOS ESPECÍFICOS PARA MÓDULO DE GESTIÓN DE PREMIOS (Encapsulados)
+   ========================================================================== */
+
+/* Animación de apertura para los modales */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-animado {
+  animation: modalFadeIn 0.2s ease-out forwards;
+}
+
+/* Barra de desplazamiento personalizada para las tablas del módulo */
+.premios-tabla-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.premios-tabla-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
