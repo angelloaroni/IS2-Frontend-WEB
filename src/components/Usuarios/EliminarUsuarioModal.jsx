@@ -26,7 +26,7 @@ export default function EliminarUsuarioModal({ usuario, onClose, onConfirm }) {
             <div className="text-[11px] text-gray-400">
               {usuario.codigo} · {usuario.puntos.toLocaleString()} puntos
             </div>
-            <div className="text-[11px] text-gray-400">{usuario.tipo}</div>
+            <div className="text-[11px] text-gray-400">{usuario.correo || usuario.tipo}</div>
           </div>
         </div>
 

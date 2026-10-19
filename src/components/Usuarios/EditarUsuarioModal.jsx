@@ -3,6 +3,7 @@ import { useState } from 'react';
 export default function EditarUsuarioModal({ usuario, onClose, onSave }) {
   const [formData, setFormData] = useState({
     nombre: usuario.nombre,
+    correo: usuario.correo || '',
     estado: usuario.estado
   });
   const [guardando, setGuardando] = useState(false);
@@ -53,6 +54,17 @@ export default function EditarUsuarioModal({ usuario, onClose, onSave }) {
               required
               value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-gray-700 mb-1">Correo institucional</label>
+            <input
+              type="email"
+              value={formData.correo}
+              onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+              placeholder="nombre@aloe.ulima.edu.pe"
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"
             />
           </div>

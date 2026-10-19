@@ -60,6 +60,7 @@ export function usuarioVista(usuario) {
     id: usuario.id_user,
     nombre,
     codigo: usuario.cod_user,
+    correo: usuario.correo_institucional || '',
     tipo: usuario.tipo,
     puntos: Number(usuario.puntos) || 0,
     estado: usuario.estado ? 'Activo' : 'Inactivo',

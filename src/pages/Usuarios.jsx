@@ -38,7 +38,7 @@ export default function Usuarios() {
   }, []);
 
   const usuariosFiltrados = usuarios.filter((user) => {
-    const texto = `${user.nombre} ${user.codigo} ${user.tipo}`.toLowerCase();
+    const texto = `${user.nombre} ${user.codigo} ${user.correo} ${user.tipo}`.toLowerCase();
     const coincideBusqueda = texto.includes(busqueda.toLowerCase());
     const coincideEstado = filtroEstado === 'Todos' || user.estado === filtroEstado;
     return coincideBusqueda && coincideEstado;
@@ -65,6 +65,7 @@ export default function Usuarios() {
         method: 'PUT',
         body: JSON.stringify({
           nombre: datosActualizados.nombre,
+          correo_institucional: datosActualizados.correo,
           estado: datosActualizados.estado === 'Activo',
         }),
       });
@@ -140,6 +141,15 @@ export default function Usuarios() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               Usuarios
+            </Link>
+            <Link
+              to="/alertas"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/10 transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Alertas
             </Link>
           </nav>
         </div>
@@ -235,7 +245,7 @@ export default function Usuarios() {
               <div className="relative w-full md:w-80">
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, código o tipo"
+                  placeholder="Buscar por nombre, correo o código"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] transition-all text-gray-800"
@@ -288,7 +298,7 @@ export default function Usuarios() {
                           </div>
                           <div>
                             <div className="font-bold text-gray-900">{user.nombre}</div>
-                            <div className="text-[11px] text-gray-400">{user.codigo}</div>
+                            <div className="text-[11px] text-gray-400">{user.correo || 'Sin correo institucional'}</div>
                           </div>
                         </div>
                       </td>
