@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { cerrarSesion, getSesion, inicialesDe } from '../api';
 
 const TACHOS_INICIALES = [
   {
@@ -42,6 +43,7 @@ const TACHOS_INICIALES = [
 
 export default function Telemetria() {
   const navigate = useNavigate();
+  const sesion = getSesion();
   const [tachos, setTachos] = useState(TACHOS_INICIALES);
   const [fechaUltimaActualizacion, setFechaUltimaActualizacion] = useState('08 oct 2026 - 09:41');
 
@@ -135,7 +137,10 @@ export default function Telemetria() {
           </div>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              cerrarSesion();
+              navigate('/');
+            }}
             className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors w-full px-2 py-1"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,11 +165,11 @@ export default function Telemetria() {
             </span>
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-[#fef2e8] text-[#f05a28] font-bold text-xs flex items-center justify-center">
-                AR
+                {inicialesDe(sesion?.nombre)}
               </div>
               <div className="text-left">
-                <div className="text-xs font-bold text-gray-900 leading-tight">Andrea Ramos</div>
-                <div className="text-[10px] text-gray-400 leading-tight">Administradora</div>
+                <div className="text-xs font-bold text-gray-900 leading-tight">{sesion?.nombre || 'Administrador'}</div>
+                <div className="text-[10px] text-gray-400 leading-tight">Administrador</div>
               </div>
             </div>
           </div>

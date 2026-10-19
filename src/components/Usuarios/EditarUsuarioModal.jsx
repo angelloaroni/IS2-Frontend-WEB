@@ -2,15 +2,19 @@ import { useState } from 'react';
 
 export default function EditarUsuarioModal({ usuario, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    nombres: usuario.nombres,
-    apellidos: usuario.apellidos,
-    correo: usuario.correo,
+    nombre: usuario.nombre,
     estado: usuario.estado
   });
+  const [guardando, setGuardando] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    setGuardando(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -28,7 +32,7 @@ export default function EditarUsuarioModal({ usuario, onClose, onSave }) {
 
         <h3 className="text-xl font-bold text-gray-900">Editar usuario</h3>
         <p className="text-xs text-gray-500 mb-5 leading-relaxed">
-          Actualiza los datos de {usuario.nombres} {usuario.apellidos}. Su código de usuario se conserva.
+          Actualiza los datos de {usuario.nombre}. Su código de usuario se conserva.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
@@ -42,43 +46,15 @@ export default function EditarUsuarioModal({ usuario, onClose, onSave }) {
             </svg>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-semibold text-gray-700 mb-1">Nombres *</label>
-              <input
-                type="text"
-                required
-                value={formData.nombres}
-                onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-gray-700 mb-1">Apellidos *</label>
-              <input
-                type="text"
-                required
-                value={formData.apellidos}
-                onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"
-              />
-            </div>
-          </div>
-
           <div>
-            <label className="block font-semibold text-gray-700 mb-1">Correo universitario *</label>
-            <div className="relative">
-              <input
-                type="email"
-                required
-                value={formData.correo}
-                onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] pr-9"
-              />
-              <svg className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
+            <label className="block font-semibold text-gray-700 mb-1">Nombre *</label>
+            <input
+              type="text"
+              required
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"
+            />
           </div>
 
           <div>
@@ -107,9 +83,10 @@ export default function EditarUsuarioModal({ usuario, onClose, onSave }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2.5 rounded-xl bg-[#f05a28] text-white hover:bg-[#d94d1f] font-semibold"
+              disabled={guardando}
+              className="px-4 py-2.5 rounded-xl bg-[#f05a28] text-white hover:bg-[#d94d1f] font-semibold disabled:opacity-70"
             >
-              Guardar cambios
+              {guardando ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
         </form>

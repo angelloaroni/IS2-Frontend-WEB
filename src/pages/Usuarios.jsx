@@ -1,107 +1,94 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import EditarUsuarioModal from '../components/usuarios/EditarUsuarioModal';
-import EliminarUsuarioModal from '../components/usuarios/EliminarUsuarioModal';
+import { api, cerrarSesion, getSesion, inicialesDe, usuarioVista } from '../api';
+import EditarUsuarioModal from '../components/Usuarios/EditarUsuarioModal';
+import EliminarUsuarioModal from '../components/Usuarios/EliminarUsuarioModal';
 import HistorialUsuarioModal from '../components/Usuarios/HistoriaUsuarioModal';
-
-const USUARIOS_INICIALES = [
-  {
-    id: 1,
-    nombres: 'Lucía',
-    apellidos: 'Torres',
-    correo: 'lucia.torres@aloe.ulima.edu.pe',
-    codigo: 'UL-2026-0142',
-    registro: '01 oct 2026',
-    puntos: 1280,
-    estado: 'Activo',
-    iniciales: 'LT'
-  },
-  {
-    id: 2,
-    nombres: 'Diego',
-    apellidos: 'Mendoza',
-    correo: 'diego.mendoza@aloe.ulima.edu.pe',
-    codigo: 'UL-2026-0143',
-    registro: '01 oct 2026',
-    puntos: 960,
-    estado: 'Activo',
-    iniciales: 'DM'
-  },
-  {
-    id: 3,
-    nombres: 'Valeria',
-    apellidos: 'Rojas',
-    correo: 'valeria.rojas@aloe.ulima.edu.pe',
-    codigo: 'UL-2026-0144',
-    registro: '02 oct 2026',
-    puntos: 700,
-    estado: 'Activo',
-    iniciales: 'VR'
-  },
-  {
-    id: 4,
-    nombres: 'Mateo',
-    apellidos: 'Salazar',
-    correo: 'mateo.salazar@aloe.ulima.edu.pe',
-    codigo: 'UL-2026-0145',
-    registro: '03 oct 2026',
-    puntos: 450,
-    estado: 'Inactivo',
-    iniciales: 'MS'
-  },
-  {
-    id: 5,
-    nombres: 'Sofía',
-    apellidos: 'Castro',
-    correo: 'sofia.castro@aloe.ulima.edu.pe',
-    codigo: 'UL-2026-0146',
-    registro: '04 oct 2026',
-    puntos: 250,
-    estado: 'Activo',
-    iniciales: 'SC'
-  }
-];
 
 export default function Usuarios() {
   const navigate = useNavigate();
-  const [usuarios, setUsuarios] = useState(USUARIOS_INICIALES);
+  const sesion = getSesion();
+  const [usuarios, setUsuarios] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [historial, setHistorial] = useState([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
 
   const [modalEditar, setModalEditar] = useState(null);
   const [modalEliminar, setModalEliminar] = useState(null);
   const [modalHistorial, setModalHistorial] = useState(null);
 
+  const cargarUsuarios = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const data = await api('/usuarios/listado');
+      setUsuarios((data || []).map(usuarioVista));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
+
   const usuariosFiltrados = usuarios.filter((user) => {
-    const nombreCompleto = `${user.nombres} ${user.apellidos}`.toLowerCase();
-    const coincideBusqueda =
-      nombreCompleto.includes(busqueda.toLowerCase()) ||
-      user.correo.toLowerCase().includes(busqueda.toLowerCase()) ||
-      user.codigo.toLowerCase().includes(busqueda.toLowerCase());
+    const texto = `${user.nombre} ${user.codigo} ${user.tipo}`.toLowerCase();
+    const coincideBusqueda = texto.includes(busqueda.toLowerCase());
     const coincideEstado = filtroEstado === 'Todos' || user.estado === filtroEstado;
     return coincideBusqueda && coincideEstado;
   });
 
-  const handleSaveEditar = (datosActualizados) => {
-    setUsuarios(
-      usuarios.map((u) => {
-        if (u.id === modalEditar.id) {
-          const nuevasIniciales = `${datosActualizados.nombres.charAt(0)}${datosActualizados.apellidos.charAt(0)}`.toUpperCase();
-          return {
-            ...u,
-            ...datosActualizados,
-            iniciales: nuevasIniciales
-          };
-        }
-        return u;
-      })
-    );
-    setModalEditar(null);
+  const abrirHistorial = async (user) => {
+    setModalHistorial(user);
+    setHistorial([]);
+    setCargandoHistorial(true);
+    try {
+      const data = await api(`/usuarios/${user.id}/historial?limite=100`);
+      setHistorial(data?.registros || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargandoHistorial(false);
+    }
   };
 
-  const handleConfirmEliminar = () => {
-    setUsuarios(usuarios.filter((u) => u.id !== modalEliminar.id));
-    setModalEliminar(null);
+  const handleSaveEditar = async (datosActualizados) => {
+    setError('');
+    try {
+      await api(`/usuarios/${modalEditar.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          nombre: datosActualizados.nombre,
+          estado: datosActualizados.estado === 'Activo',
+        }),
+      });
+      setModalEditar(null);
+      await cargarUsuarios();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleConfirmEliminar = async () => {
+    setError('');
+    try {
+      await api(`/usuarios/${modalEliminar.id}`, { method: 'DELETE' });
+      setModalEliminar(null);
+      await cargarUsuarios();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const salir = () => {
+    cerrarSesion();
+    navigate('/');
   };
 
   return (
@@ -169,7 +156,7 @@ export default function Usuarios() {
           </div>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={salir}
             className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors w-full px-2 py-1"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,11 +181,11 @@ export default function Usuarios() {
             </span>
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-[#fef2e8] text-[#f05a28] font-bold text-xs flex items-center justify-center">
-                AR
+                {inicialesDe(sesion?.nombre)}
               </div>
               <div className="text-left">
-                <div className="text-xs font-bold text-gray-900 leading-tight">Andrea Ramos</div>
-                <div className="text-[10px] text-gray-400 leading-tight">Administradora</div>
+                <div className="text-xs font-bold text-gray-900 leading-tight">{sesion?.nombre || 'Administrador'}</div>
+                <div className="text-[10px] text-gray-400 leading-tight">Administrador</div>
               </div>
             </div>
           </div>
@@ -221,6 +208,12 @@ export default function Usuarios() {
             </span>
           </div>
 
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium">
+              {error}
+            </div>
+          )}
+
           <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
             <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,7 +235,7 @@ export default function Usuarios() {
               <div className="relative w-full md:w-80">
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, correo o código"
+                  placeholder="Buscar por nombre, código o tipo"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] transition-all text-gray-800"
@@ -267,15 +260,25 @@ export default function Usuarios() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-gray-50/70 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-100">
                   <tr>
-                    <th className="py-3 px-6 font-semibold">Usuario / Correo</th>
+                    <th className="py-3 px-6 font-semibold">Usuario</th>
                     <th className="py-3 px-4 font-semibold">Código</th>
-                    <th className="py-3 px-4 font-semibold">Registro</th>
+                    <th className="py-3 px-4 font-semibold">Tipo</th>
                     <th className="py-3 px-4 font-semibold">Puntos</th>
                     <th className="py-3 px-4 font-semibold">Estado</th>
                     <th className="py-3 px-6 font-semibold text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-gray-700">
+                  {cargando && (
+                    <tr>
+                      <td colSpan="6" className="py-8 px-6 text-center text-gray-400">Cargando usuarios...</td>
+                    </tr>
+                  )}
+                  {!cargando && usuariosFiltrados.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="py-8 px-6 text-center text-gray-400">No hay usuarios para mostrar.</td>
+                    </tr>
+                  )}
                   {usuariosFiltrados.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-3.5 px-6">
@@ -284,13 +287,13 @@ export default function Usuarios() {
                             {user.iniciales}
                           </div>
                           <div>
-                            <div className="font-bold text-gray-900">{user.nombres} {user.apellidos}</div>
-                            <div className="text-[11px] text-gray-400">{user.correo}</div>
+                            <div className="font-bold text-gray-900">{user.nombre}</div>
+                            <div className="text-[11px] text-gray-400">{user.codigo}</div>
                           </div>
                         </div>
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-gray-800">{user.codigo}</td>
-                      <td className="py-3.5 px-4 text-gray-500">{user.registro}</td>
+                      <td className="py-3.5 px-4 text-gray-500">{user.tipo}</td>
                       <td className="py-3.5 px-4 font-bold text-gray-900">{user.puntos.toLocaleString()}</td>
                       <td className="py-3.5 px-4">
                         <span
@@ -307,7 +310,7 @@ export default function Usuarios() {
                         <div className="flex items-center justify-end gap-1.5">
                           {/* BOTÓN HISTORIAL */}
                           <button
-                            onClick={() => setModalHistorial(user)}
+                            onClick={() => abrirHistorial(user)}
                             title="Ver historial de reciclaje"
                             className="p-1.5 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 rounded-lg transition-colors border border-gray-100"
                           >
@@ -352,7 +355,7 @@ export default function Usuarios() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-2 pt-2">
-            <div>Cuentas de demostración · Códigos asignados durante el registro de usuario.</div>
+            <div>Las cuentas se registran en la aplicación. Este panel consulta y actualiza las que ya existen.</div>
             <div>Universidad de Lima · Proyecto de reciclaje — Entorno de demostración - 2026</div>
           </div>
         </div>
@@ -362,6 +365,8 @@ export default function Usuarios() {
       {modalHistorial && (
         <HistorialUsuarioModal
           usuario={modalHistorial}
+          registros={historial}
+          cargando={cargandoHistorial}
           onClose={() => setModalHistorial(null)}
         />
       )}

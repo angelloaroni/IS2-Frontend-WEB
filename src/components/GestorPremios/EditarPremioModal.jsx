@@ -10,15 +10,22 @@ export default function EditarPremioModal({ premio, onClose, onSave }) {
     imagen: premio.imagen
   });
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      nombre: formData.nombre,
-      descripcion: formData.descripcion,
-      puntos: Number(formData.puntos),
-      stock: Number(formData.stock),
-      estado: formData.estado
-    });
+    setError('');
+    try {
+      await onSave({
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        puntos: Number(formData.puntos),
+        stock: Number(formData.stock),
+        estado: formData.estado
+      });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -43,6 +50,11 @@ export default function EditarPremioModal({ premio, onClose, onSave }) {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl font-medium">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block font-semibold text-gray-700 mb-1">Nombre del premio *</label>
             <input
@@ -106,7 +118,7 @@ export default function EditarPremioModal({ premio, onClose, onSave }) {
                 📦
               </div>
               <div>
-                <div className="font-semibold text-gray-800">{formData.imagen}</div>
+                <div className="font-semibold text-gray-800">{formData.imagen || 'premio.png'}</div>
                 <div className="text-[10px] text-gray-400">Imagen actual · 180 KB</div>
               </div>
             </div>

@@ -1,68 +1,41 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { api, cerrarSesion, getSesion, inicialesDe, premioABody, premioVista } from '../api';
 import AgregarPremioModal from '../components/GestorPremios/AgregarPremioModal';
 import EditarPremioModal from '../components/GestorPremios/EditarPremioModal';
 import EliminarPremioModal from '../components/GestorPremios/EliminarPremioModal';
 import VerPremioModal from '../components/GestorPremios/VerPremioModal';
 
-const PREMIOS_INICIALES = [
-  {
-    id: 1,
-    nombre: 'Botella reutilizable',
-    descripcion: 'Acero inoxidable · 500 ml',
-    puntos: 800,
-    stock: 24,
-    estado: 'Activo',
-    imagen: 'botella-reutilizable.png'
-  },
-  {
-    id: 2,
-    nombre: 'Bolsa de tela',
-    descripcion: 'Algodón · Edición campus',
-    puntos: 500,
-    stock: 42,
-    estado: 'Activo',
-    imagen: 'bolsa-tela.png'
-  },
-  {
-    id: 3,
-    nombre: 'Cuaderno reciclado',
-    descripcion: 'Papel reciclado · A5',
-    puntos: 450,
-    stock: 38,
-    estado: 'Activo',
-    imagen: 'cuaderno-reciclado.png'
-  },
-  {
-    id: 4,
-    nombre: 'Kit de semillas',
-    descripcion: 'Huerto en casa · 3 variedades',
-    puntos: 650,
-    stock: 16,
-    estado: 'Activo',
-    imagen: 'kit-semillas.png'
-  },
-  {
-    id: 5,
-    nombre: 'Taza reutilizable',
-    descripcion: 'Cerámica · 350 ml',
-    puntos: 700,
-    stock: 0,
-    estado: 'Agotado',
-    imagen: 'taza-reutilizable.png'
-  }
-];
-
 export default function Premios() {
   const navigate = useNavigate();
-  const [premios, setPremios] = useState(PREMIOS_INICIALES);
+  const sesion = getSesion();
+  const [premios, setPremios] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
 
   const [modalAgregar, setModalAgregar] = useState(false);
   const [modalEditar, setModalEditar] = useState(null);
   const [modalEliminar, setModalEliminar] = useState(null);
   const [modalVer, setModalVer] = useState(null);
+
+  const cargarPremios = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const data = await api('/premios');
+      setPremios((data || []).map(premioVista));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarPremios();
+  }, []);
 
   const premiosFiltrados = premios.filter((item) => {
     const coincideNombre = item.nombre.toLowerCase().includes(busqueda.toLowerCase());
@@ -74,21 +47,41 @@ export default function Premios() {
   const totalActivos = premios.filter((p) => p.estado === 'Activo').length;
   const totalUnidades = premios.reduce((acc, p) => acc + Number(p.stock), 0);
 
-  const handleSaveAgregar = (nuevoPremio) => {
-    setPremios([...premios, { id: Date.now(), ...nuevoPremio }]);
+  const handleSaveAgregar = async (nuevoPremio) => {
+    setError('');
+    await api('/premios', {
+      method: 'POST',
+      body: JSON.stringify(premioABody(nuevoPremio)),
+    });
     setModalAgregar(false);
+    await cargarPremios();
   };
 
-  const handleSaveEditar = (datosActualizados) => {
-    setPremios(
-      premios.map((p) => (p.id === modalEditar.id ? { ...p, ...datosActualizados } : p))
-    );
+  const handleSaveEditar = async (datosActualizados) => {
+    setError('');
+    await api(`/premios/${modalEditar.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(premioABody(datosActualizados)),
+    });
     setModalEditar(null);
+    await cargarPremios();
   };
 
-  const handleConfirmEliminar = () => {
-    setPremios(premios.filter((p) => p.id !== modalEliminar.id));
-    setModalEliminar(null);
+  const handleConfirmEliminar = async () => {
+    setError('');
+    try {
+      await api(`/premios/${modalEliminar.id}`, { method: 'DELETE' });
+      setModalEliminar(null);
+      await cargarPremios();
+    } catch (err) {
+      setError(err.message);
+      setModalEliminar(null);
+    }
+  };
+
+  const salir = () => {
+    cerrarSesion();
+    navigate('/');
   };
 
   return (
@@ -156,7 +149,7 @@ export default function Premios() {
           </div>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={salir}
             className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors w-full px-2 py-1"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -181,11 +174,11 @@ export default function Premios() {
             </span>
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-[#fef2e8] text-[#f05a28] font-bold text-xs flex items-center justify-center">
-                AR
+                {inicialesDe(sesion?.nombre)}
               </div>
               <div className="text-left">
-                <div className="text-xs font-bold text-gray-900 leading-tight">Andrea Ramos</div>
-                <div className="text-[10px] text-gray-400 leading-tight">Administradora</div>
+                <div className="text-xs font-bold text-gray-900 leading-tight">{sesion?.nombre || 'Administrador'}</div>
+                <div className="text-[10px] text-gray-400 leading-tight">Administrador</div>
               </div>
             </div>
           </div>
@@ -210,6 +203,12 @@ export default function Premios() {
               <span className="text-base font-bold">+</span> Agregar premio
             </button>
           </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm">
@@ -287,6 +286,16 @@ export default function Premios() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-gray-700">
+                  {cargando && (
+                    <tr>
+                      <td colSpan="5" className="py-8 px-6 text-center text-gray-400">Cargando premios...</td>
+                    </tr>
+                  )}
+                  {!cargando && premiosFiltrados.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="py-8 px-6 text-center text-gray-400">No hay premios para mostrar.</td>
+                    </tr>
+                  )}
                   {premiosFiltrados.map((premio) => (
                     <tr key={premio.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-3.5 px-6">
@@ -357,7 +366,7 @@ export default function Premios() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-2 pt-2">
-            <div>Catálogo de demostración · Los cambios se administran desde este panel.</div>
+            <div>El catálogo se guarda en la base de datos del proyecto.</div>
             <div>Universidad de Lima · Proyecto de reciclaje — 2026</div>
           </div>
         </div>

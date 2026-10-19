@@ -1,24 +1,40 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, guardarSesion } from '../api';
 
 export default function Login() {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState('');
+  const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
 
-  const USUARIO_VALIDO = "admin";
-  const PASSWORD_VALIDO = "123456";
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (usuario === USUARIO_VALIDO && password === PASSWORD_VALIDO) {
-      setError('');
-      navigate('/GestorPremios');
-    } else {
-      setError('Usuario o contraseña incorrectos.');
+    setError('');
+    setEnviando(true);
+
+    try {
+      const sesion = await api('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          cod_user: usuario.trim(),
+          contraseña: password,
+        }),
+      });
+
+      if (String(sesion?.usuario?.tipo || '').toLowerCase() !== 'admin') {
+        setError('Esta cuenta no tiene acceso de administrador.');
+        return;
+      }
+
+      guardarSesion(sesion.usuario, sesion.token);
+      navigate('/premios');
+    } catch (err) {
+      setError(err.message || 'Usuario o contraseña incorrectos.');
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -110,14 +126,16 @@ export default function Login() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-2">
-                Usuario de administrador
+                Código de administrador
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={usuario}
                   onChange={(e) => setUsuario(e.target.value)}
-                  placeholder="admin"
+                  placeholder="00000001"
+                  inputMode="numeric"
+                  maxLength={8}
                   required
                   className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] focus:ring-1 focus:ring-[#f05a28] transition-all pr-10 text-gray-800"
                 />
@@ -163,9 +181,10 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-[#f05a28] hover:bg-[#d94d1f] text-white font-medium py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-md shadow-orange-200"
+              disabled={enviando}
+              className="w-full bg-[#f05a28] hover:bg-[#d94d1f] disabled:opacity-70 text-white font-medium py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-md shadow-orange-200"
             >
-              Ingresar al panel
+              {enviando ? 'Ingresando...' : 'Ingresar al panel'}
             </button>
           </form>
 
