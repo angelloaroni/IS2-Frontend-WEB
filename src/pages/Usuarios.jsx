@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import EditarUsuarioModal from '../components/Usuarios/EditarUsuarioModal';
-import EliminarUsuarioModal from '../components/Usuarios/EliminarUsuarioModal';
+import EditarUsuarioModal from '../components/usuarios/EditarUsuarioModal';
+import EliminarUsuarioModal from '../components/usuarios/EliminarUsuarioModal';
+import HistorialUsuarioModal from '../components/Usuarios/HistoriaUsuarioModal';
 
 const USUARIOS_INICIALES = [
   {
@@ -69,6 +70,7 @@ export default function Usuarios() {
 
   const [modalEditar, setModalEditar] = useState(null);
   const [modalEliminar, setModalEliminar] = useState(null);
+  const [modalHistorial, setModalHistorial] = useState(null);
 
   const usuariosFiltrados = usuarios.filter((user) => {
     const nombreCompleto = `${user.nombres} ${user.apellidos}`.toLowerCase();
@@ -124,7 +126,7 @@ export default function Usuarios() {
 
           <nav className="space-y-1">
             <Link
-              to="/GestorPremios"
+              to="/premios"
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:bg-white/10 transition-all"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -230,7 +232,7 @@ export default function Usuarios() {
                 El registro de usuarios se realiza desde la aplicación Android.
               </div>
               <div className="text-xs text-emerald-600">
-                Este panel permite editar y borrar cuentas existentes; no crear nuevos usuarios.
+                Este panel permite consultar historial, editar y borrar cuentas existentes.
               </div>
             </div>
           </div>
@@ -303,16 +305,32 @@ export default function Usuarios() {
                       </td>
                       <td className="py-3.5 px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* BOTÓN HISTORIAL */}
+                          <button
+                            onClick={() => setModalHistorial(user)}
+                            title="Ver historial de reciclaje"
+                            className="p-1.5 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 rounded-lg transition-colors border border-gray-100"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+
+                          {/* BOTÓN EDITAR */}
                           <button
                             onClick={() => setModalEditar(user)}
+                            title="Editar usuario"
                             className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg transition-colors border border-gray-100"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                             </svg>
                           </button>
+
+                          {/* BOTÓN ELIMINAR */}
                           <button
                             onClick={() => setModalEliminar(user)}
+                            title="Eliminar usuario"
                             className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-colors border border-gray-100"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -329,7 +347,7 @@ export default function Usuarios() {
 
             <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
               <div>Mostrando {usuariosFiltrados.length} de {usuarios.length} usuarios</div>
-              <div>Acciones: editar · borrar</div>
+              <div>Acciones: historial · editar · borrar</div>
             </div>
           </div>
 
@@ -339,6 +357,14 @@ export default function Usuarios() {
           </div>
         </div>
       </main>
+
+      {/* POPUPS / MODALES */}
+      {modalHistorial && (
+        <HistorialUsuarioModal
+          usuario={modalHistorial}
+          onClose={() => setModalHistorial(null)}
+        />
+      )}
 
       {modalEditar && (
         <EditarUsuarioModal
