@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, guardarSesion } from '../api';
+import { MODO_DEMO, authApi, guardarSesion } from '../api';
+
+const ALIAS_USUARIO = { admin: '00000001' };
+
+const USUARIO_INICIAL = import.meta.env.DEV ? 'admin' : '';
+const PASSWORD_INICIAL = import.meta.env.DEV ? '123456' : '';
+
+function codigoDeUsuario(texto) {
+  const valor = texto.trim();
+  return ALIAS_USUARIO[valor.toLowerCase()] ?? valor;
+}
 
 export default function Login() {
-  const [usuario, setUsuario] = useState('');
-  const [password, setPassword] = useState('');
+  const [usuario, setUsuario] = useState(USUARIO_INICIAL);
+  const [password, setPassword] = useState(PASSWORD_INICIAL);
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -16,13 +26,7 @@ export default function Login() {
     setEnviando(true);
 
     try {
-      const sesion = await api('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          cod_user: usuario.trim(),
-          contraseña: password,
-        }),
-      });
+      const sesion = await authApi.login(codigoDeUsuario(usuario), password);
 
       if (String(sesion?.usuario?.tipo || '').toLowerCase() !== 'admin') {
         setError('Esta cuenta no tiene acceso de administrador.');
@@ -40,7 +44,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 font-sans bg-white">
-      
+
       <div className="bg-[#121c17] text-white p-8 lg:p-14 flex flex-col justify-between min-h-screen">
         <div>
           <div className="flex items-center gap-3 mb-10">
@@ -117,7 +121,12 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            
+            {MODO_DEMO && (
+              <div className="p-3 bg-[#fff6f0] border border-[#fde2d1] text-[#b9421a] rounded-xl text-xs">
+                <span className="font-bold">Modo demo activo.</span> No se usa el backend: entra con <b>admin</b> / <b>123456</b> y verás datos simulados.
+              </div>
+            )}
+
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-medium">
                 {error}
@@ -126,16 +135,16 @@ export default function Login() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-2">
-                Código de administrador
+                Usuario o código de administrador
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={usuario}
                   onChange={(e) => setUsuario(e.target.value)}
-                  placeholder="00000001"
-                  inputMode="numeric"
-                  maxLength={8}
+                  placeholder="admin o 00000001"
+                  autoComplete="username"
+                  maxLength={20}
                   required
                   className="w-full px-4 py-3 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28] focus:ring-1 focus:ring-[#f05a28] transition-all pr-10 text-gray-800"
                 />

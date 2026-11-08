@@ -6,6 +6,7 @@ import GestorPremios from './pages/GestorPremios'
 import Telemetria from './pages/Telemetria'
 import Usuarios from './pages/Usuarios'
 import Alertas from './pages/Alertas'
+import Participacion from './pages/Participacion'
 
 function RutaAdmin() {
   const sesion = getSesion()
@@ -31,6 +32,8 @@ export default function App() {
         <Route path="/telemetria" element={<Telemetria />} />
         <Route path="/Usuarios" element={<Usuarios />} />
         <Route path="/usuarios" element={<Usuarios />} />
+        <Route path="/Participacion" element={<Participacion />} />
+        <Route path="/participacion" element={<Participacion />} />
         <Route path="/alertas" element={<Alertas />} />
       </Route>
     </Routes>

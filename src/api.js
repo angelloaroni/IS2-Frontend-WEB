@@ -1,4 +1,6 @@
-const API = '/api';
+const API = import.meta.env.VITE_API_URL || '/api';
+
+export const MODO_DEMO = import.meta.env.DEV && import.meta.env.VITE_MODO_DEMO === 'true';
 
 export function getToken() {
   return sessionStorage.getItem('token');
@@ -30,6 +32,15 @@ export function inicialesDe(nombre) {
   return (letras || 'A').toUpperCase();
 }
 
+function conQuery(path, params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([clave, valor]) => {
+    if (valor !== undefined && valor !== null && valor !== '') query.set(clave, String(valor));
+  });
+  const texto = query.toString();
+  return texto ? `${path}?${texto}` : path;
+}
+
 export async function api(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (options.body) {
@@ -40,18 +51,84 @@ export async function api(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  let respuesta;
-  try {
-    respuesta = await fetch(`${API}${path}`, { ...options, headers });
-  } catch {
-    throw new Error('No se pudo conectar con el servidor.');
+  let status;
+  let json;
+  if (MODO_DEMO) {
+    const { responderDemo } = await import('./demo/apiDemo.js');
+    ({ status, json } = await responderDemo(path, { ...options, headers }));
+  } else {
+    let respuesta;
+    try {
+      respuesta = await fetch(`${API}${path}`, { ...options, headers });
+    } catch {
+      throw new Error('No se pudo conectar con el servidor.');
+    }
+    status = respuesta.status;
+    json = await respuesta.json().catch(() => null);
   }
 
-  const json = await respuesta.json().catch(() => null);
-  if (!respuesta.ok || json?.ok === false) {
-    throw new Error(json?.mensaje || 'No se pudo completar la solicitud.');
+  if (status === 401 && token) {
+    cerrarSesion();
+    window.location.replace('/');
+    throw new Error(json?.mensaje || 'Tu sesión expiró. Vuelve a iniciar sesión.');
+  }
+
+  if (!json && status >= 502 && status <= 504) {
+    const error = new Error('No se pudo conectar con el backend. Verifica que esté encendido en http://localhost:3000.');
+    error.status = status;
+    throw error;
+  }
+
+  if (status < 200 || status >= 300 || json?.ok === false) {
+    const error = new Error(json?.mensaje || 'No se pudo completar la solicitud.');
+    error.status = status;
+    throw error;
   }
   return json?.data;
+}
+
+const enviar = (method, body) => ({ method, body: JSON.stringify(body) });
+
+export const authApi = {
+  login: (codUser, contrasena) => api('/auth/login', enviar('POST', { cod_user: codUser, contraseña: contrasena })),
+};
+
+export const usuariosApi = {
+  listar: ({ pagina = 1, limite = 20, q } = {}) => api(conQuery('/usuarios/admin', { pagina, limite, q })),
+  obtener: (id) => api(`/usuarios/admin/${id}`),
+  actualizar: (id, cambios) => api(`/usuarios/admin/${id}`, enviar('PATCH', cambios)),
+  desactivar: (id) => api(`/usuarios/${id}`, { method: 'DELETE' }),
+};
+
+export const premiosApi = {
+  listar: () => api('/premios'),
+  crear: (datos) => api('/premios', enviar('POST', datos)),
+};
+
+export const tachosApi = {
+  listar: () => api('/tachos'),
+};
+
+export const dashboardApi = {
+  materiales: ({ desde, hasta, material } = {}) => api(conQuery('/dashboard/materiales', { desde, hasta, material })),
+  participacion: ({ desde, hasta } = {}) => api(conQuery('/dashboard/participacion', { desde, hasta })),
+};
+
+export const rankingApi = {
+  obtener: ({ desde, hasta } = {}) => api(conQuery('/ranking', { desde, hasta })),
+};
+
+export const MATERIALES = ['plastico', 'papel/carton', 'organicos'];
+
+const ETIQUETAS_MATERIAL = {
+  plastico: 'Plástico',
+  'papel/carton': 'Papel y cartón',
+  organicos: 'Orgánicos',
+  organico: 'Orgánicos',
+};
+
+export function etiquetaMaterial(tipo) {
+  return ETIQUETAS_MATERIAL[String(tipo || '').toLowerCase()] || tipo || 'Sin tipo';
 }
 
 export function usuarioVista(usuario) {
@@ -61,8 +138,9 @@ export function usuarioVista(usuario) {
     nombre,
     codigo: usuario.cod_user,
     correo: usuario.correo_institucional || '',
-    tipo: usuario.tipo,
+    tipo: String(usuario.tipo || '').toLowerCase(),
     puntos: Number(usuario.puntos) || 0,
+    activo: usuario.estado === true,
     estado: usuario.estado ? 'Activo' : 'Inactivo',
     iniciales: inicialesDe(nombre),
   };

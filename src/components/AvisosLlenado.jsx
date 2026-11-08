@@ -65,7 +65,6 @@ export default function AvisosLlenado({ children }) {
         }
         conocidos.current = llenos;
       } catch {
-        // La siguiente consulta vuelve a intentarlo sin interrumpir la pantalla.
       }
     };
 
