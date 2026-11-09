@@ -12,9 +12,9 @@ export default function EliminarUsuarioModal({ usuario, onClose, onConfirm }) {
           </svg>
         </div>
 
-        <h3 className="text-xl font-bold text-gray-900 mb-1">¿Eliminar a este usuario?</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-1">¿Desactivar a este usuario?</h3>
         <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-          Confirma que deseas borrar esta cuenta del sistema de reciclaje.
+          La cuenta quedará inactiva y no podrá iniciar sesión.
         </p>
 
         <div className="bg-gray-50 p-3.5 rounded-2xl flex items-center gap-3 mb-4 border border-gray-100">
@@ -22,18 +22,18 @@ export default function EliminarUsuarioModal({ usuario, onClose, onConfirm }) {
             {usuario.iniciales}
           </div>
           <div>
-            <div className="font-bold text-xs text-gray-900">{usuario.nombres} {usuario.apellidos}</div>
+            <div className="font-bold text-xs text-gray-900">{usuario.nombre}</div>
             <div className="text-[11px] text-gray-400">
               {usuario.codigo} · {usuario.puntos.toLocaleString()} puntos
             </div>
-            <div className="text-[11px] text-gray-400">{usuario.correo}</div>
+            <div className="text-[11px] text-gray-400">{usuario.correo || usuario.tipo}</div>
           </div>
         </div>
 
         <div className="bg-red-50 border border-red-100 p-3.5 rounded-2xl mb-5 text-xs text-red-700">
-          <div className="font-bold mb-0.5">Esta acción no se puede deshacer.</div>
+          <div className="font-bold mb-0.5">La cuenta deja de estar activa.</div>
           <div className="text-[11px] text-red-600 leading-snug">
-            Se borrará la cuenta y el usuario perderá el acceso al sistema. También se eliminarán sus puntos y su historial asociado.
+            El historial y los puntos se conservan. Puedes volver a activar la cuenta desde editar.
           </div>
         </div>
 
@@ -50,7 +50,7 @@ export default function EliminarUsuarioModal({ usuario, onClose, onConfirm }) {
             onClick={onConfirm}
             className="px-4 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 font-semibold text-xs"
           >
-            Eliminar usuario
+            Desactivar usuario
           </button>
         </div>
       </div>

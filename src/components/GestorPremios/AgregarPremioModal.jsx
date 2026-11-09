@@ -10,16 +10,23 @@ export default function AgregarPremioModal({ onClose, onSave }) {
     imagen: 'premio-nuevo.png'
   });
 
-  const handleSubmit = (e) => {
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      nombre: formData.nombre,
-      descripcion: formData.descripcion,
-      puntos: Number(formData.puntos),
-      stock: Number(formData.stock),
-      estado: formData.estado,
-      imagen: formData.imagen || 'premio-nuevo.png'
-    });
+    setError('');
+    try {
+      await onSave({
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        puntos: Number(formData.puntos),
+        stock: Number(formData.stock),
+        estado: formData.estado,
+        imagen: formData.imagen || 'premio-nuevo.png'
+      });
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -44,6 +51,11 @@ export default function AgregarPremioModal({ onClose, onSave }) {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl font-medium">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block font-semibold text-gray-700 mb-1">Nombre del premio *</label>
             <input
