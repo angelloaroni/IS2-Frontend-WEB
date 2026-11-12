@@ -27,6 +27,18 @@ const ITEMS = [
     icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'
   },
   {
+    key: 'materiales',
+    to: '/materiales',
+    label: 'Materiales',
+    icon: 'M3 3v18h18M7 16v-5M12 16V8M17 16v-8'
+  },
+  {
+    key: 'rankings',
+    to: '/rankings',
+    label: 'Rankings',
+    icon: 'M12 3l2.2 4.6 5 .7-3.6 3.5.9 5.1L12 14.8 7.5 16.9l.9-5.1L4.8 8.3l5-.7L12 3z'
+  },
+  {
     key: 'alertas',
     to: '/alertas',
     label: 'Alertas',
