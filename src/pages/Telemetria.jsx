@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { etiquetaMaterial, tachosApi } from '../api';
 import Sidebar from '../components/Layout/Sidebar';
 import Encabezado from '../components/Layout/Encabezado';
+
+const INTERVALO_ACTUALIZACION_MS = 5_000;
 
 function tachoVista(tacho) {
   const porcentaje = tacho.porcentaje == null ? null : Number(tacho.porcentaje);
@@ -33,10 +35,15 @@ export default function Telemetria() {
   const [tachos, setTachos] = useState([]);
   const [fechaUltimaActualizacion, setFechaUltimaActualizacion] = useState('');
   const [cargando, setCargando] = useState(true);
+  const [actualizando, setActualizando] = useState(false);
   const [error, setError] = useState('');
+  const solicitudEnCurso = useRef(false);
 
-  const cargarTachos = async () => {
-    setCargando(true);
+  const cargarTachos = async ({ inicial = false } = {}) => {
+    if (solicitudEnCurso.current) return;
+    solicitudEnCurso.current = true;
+    setActualizando(true);
+    if (inicial) setCargando(true);
     setError('');
     try {
       const data = await tachosApi.listar();
@@ -45,12 +52,16 @@ export default function Telemetria() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setCargando(false);
+      solicitudEnCurso.current = false;
+      setActualizando(false);
+      if (inicial) setCargando(false);
     }
   };
 
   useEffect(() => {
-    cargarTachos();
+    cargarTachos({ inicial: true });
+    const intervalo = setInterval(() => cargarTachos(), INTERVALO_ACTUALIZACION_MS);
+    return () => clearInterval(intervalo);
   }, []);
 
   const totalTachos = tachos.length;
@@ -77,13 +88,14 @@ export default function Telemetria() {
             </div>
 
             <button
-              onClick={cargarTachos}
-              className="bg-[#f05a28] hover:bg-[#d94d1f] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center gap-2 shadow-sm self-start md:self-auto"
+              onClick={() => cargarTachos()}
+              disabled={actualizando}
+              className="bg-[#f05a28] hover:bg-[#d94d1f] disabled:opacity-60 text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center gap-2 shadow-sm self-start md:self-auto"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`w-4 h-4 ${actualizando ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Actualizar
+              {actualizando ? 'Actualizando…' : 'Actualizar'}
             </button>
           </div>
 
@@ -195,7 +207,7 @@ export default function Telemetria() {
           <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-2 pt-4 border-t border-gray-200/60">
             <div>
               Recolección desde 80% de llenado o cuando el tacho reporta capacidad llena.<br />
-              Actualizar vuelve a consultar las lecturas guardadas.
+              Consulta automática al backend cada 5 segundos; también puedes actualizar manualmente.
             </div>
           </div>
 

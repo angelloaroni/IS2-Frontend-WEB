@@ -34,7 +34,7 @@ export default function Login() {
       }
 
       guardarSesion(sesion.usuario, sesion.token);
-      navigate('/premios');
+      navigate('/telemetria');
     } catch (err) {
       setError(err.message || 'Usuario o contraseña incorrectos.');
     } finally {

@@ -83,6 +83,8 @@ export default function EditarPremioModal({ premio, onClose, onSave }) {
               <input
                 type="number"
                 required
+                min="1"
+                step="any"
                 value={formData.puntos}
                 onChange={(e) => setFormData({ ...formData, puntos: e.target.value })}
                 className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"
@@ -93,6 +95,8 @@ export default function EditarPremioModal({ premio, onClose, onSave }) {
               <input
                 type="number"
                 required
+                min="0"
+                step="1"
                 value={formData.stock}
                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                 className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f05a28]"

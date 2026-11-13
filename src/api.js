@@ -103,6 +103,7 @@ export const usuariosApi = {
 export const premiosApi = {
   listar: () => api('/premios'),
   crear: (datos) => api('/premios', enviar('POST', datos)),
+  actualizar: (id, datos) => api(`/premios/${id}`, enviar('PUT', datos)),
 };
 
 export const tachosApi = {
@@ -118,11 +119,12 @@ export const rankingApi = {
   obtener: ({ desde, hasta } = {}) => api(conQuery('/ranking', { desde, hasta })),
 };
 
-export const MATERIALES = ['plastico', 'papel/carton', 'organicos'];
+export const MATERIALES = ['plastico', 'papel/carton', 'vidrio'];
 
 const ETIQUETAS_MATERIAL = {
   plastico: 'Plástico',
   'papel/carton': 'Papel y cartón',
+  vidrio: 'Vidrio',
   organicos: 'Orgánicos',
   organico: 'Orgánicos',
 };

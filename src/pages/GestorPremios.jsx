@@ -3,6 +3,7 @@ import { premioABody, premioVista, premiosApi } from '../api';
 import Sidebar from '../components/Layout/Sidebar';
 import Encabezado from '../components/Layout/Encabezado';
 import AgregarPremioModal from '../components/GestorPremios/AgregarPremioModal';
+import EditarPremioModal from '../components/GestorPremios/EditarPremioModal';
 import VerPremioModal from '../components/GestorPremios/VerPremioModal';
 
 export default function Premios() {
@@ -13,6 +14,7 @@ export default function Premios() {
   const [error, setError] = useState('');
 
   const [modalAgregar, setModalAgregar] = useState(false);
+  const [modalEditar, setModalEditar] = useState(null);
   const [modalVer, setModalVer] = useState(null);
 
   const cargarPremios = async () => {
@@ -46,6 +48,12 @@ export default function Premios() {
     setError('');
     await premiosApi.crear(premioABody(nuevoPremio));
     setModalAgregar(false);
+    await cargarPremios();
+  };
+
+  const handleSaveEditar = async (cambios) => {
+    await premiosApi.actualizar(modalEditar.id, premioABody(cambios));
+    setModalEditar(null);
     await cargarPremios();
   };
 
@@ -209,6 +217,16 @@ export default function Premios() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </button>
+                          <button
+                            onClick={() => setModalEditar(premio)}
+                            title="Editar premio"
+                            aria-label="Editar premio"
+                            className="p-1.5 hover:bg-orange-50 text-gray-400 hover:text-[#f05a28] rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -219,7 +237,7 @@ export default function Premios() {
 
             <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
               <div>Mostrando {premiosFiltrados.length} de {premios.length} premios</div>
-              <div>Editar y eliminar premios: pendiente en el backend</div>
+              <div>Los cambios se guardan en el catálogo del proyecto.</div>
             </div>
           </div>
 
@@ -234,6 +252,14 @@ export default function Premios() {
         <AgregarPremioModal
           onClose={() => setModalAgregar(false)}
           onSave={handleSaveAgregar}
+        />
+      )}
+
+      {modalEditar && (
+        <EditarPremioModal
+          premio={modalEditar}
+          onClose={() => setModalEditar(null)}
+          onSave={handleSaveEditar}
         />
       )}
 

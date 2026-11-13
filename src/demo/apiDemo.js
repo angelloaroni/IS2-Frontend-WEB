@@ -1,5 +1,5 @@
 const TOKEN_DEMO = 'token-modo-demo';
-const MATERIALES = ['plastico', 'papel/carton', 'organicos'];
+const MATERIALES = ['plastico', 'papel/carton', 'vidrio'];
 
 let semilla = 2026;
 const azar = () => ((semilla = (semilla * 16807) % 2147483647) / 2147483647);
@@ -47,7 +47,7 @@ const premios = [
 const tachos = [
   { idTacho: 1, tipo: 'plastico', latitud: -12.0848, longitud: -76.9714, capacidad: false, porcentaje: 35 },
   { idTacho: 2, tipo: 'papel/carton', latitud: -12.0852, longitud: -76.9722, capacidad: true, porcentaje: 96 },
-  { idTacho: 3, tipo: 'organicos', latitud: -12.0844, longitud: -76.9709, capacidad: false, porcentaje: null }
+  { idTacho: 3, tipo: 'vidrio', latitud: -12.0844, longitud: -76.9709, capacidad: false, porcentaje: null }
 ];
 
 class ErrorDemo extends Error {
@@ -150,6 +150,30 @@ function rutear(metodo, ruta, q, cuerpo) {
     const nuevo = { id_premio: Math.max(0, ...premios.map((p) => p.id_premio)) + 1, ...cuerpo, costo: Number(cuerpo.costo), stock: Number(cuerpo.stock) };
     premios.push(nuevo);
     return exito(nuevo, 201);
+  }
+  m = /^\/premios\/(\d+)$/.exec(ruta);
+  if (m && metodo === 'PUT') {
+    const premio = premios.find((p) => p.id_premio === Number(m[1]));
+    if (!premio) throw new ErrorDemo('Premio no encontrado', 404);
+    soloCampos(cuerpo, ['nombre', 'descripcion', 'costo', 'stock'], 'Campos no permitidos');
+    if (!Object.keys(cuerpo).length) throw new ErrorDemo('Debe enviar al menos un campo permitido', 400);
+    if ('nombre' in cuerpo) {
+      if (typeof cuerpo.nombre !== 'string' || !cuerpo.nombre.trim()) throw new ErrorDemo('El nombre del premio es obligatorio', 400);
+    }
+    if ('descripcion' in cuerpo) {
+      if (typeof cuerpo.descripcion !== 'string' || !cuerpo.descripcion.trim()) throw new ErrorDemo('La descripción del premio es obligatoria', 400);
+    }
+    if ('costo' in cuerpo) {
+      if (!Number.isFinite(Number(cuerpo.costo)) || Number(cuerpo.costo) <= 0) throw new ErrorDemo('El costo debe ser mayor a cero', 400);
+    }
+    if ('stock' in cuerpo) {
+      if (!Number.isSafeInteger(Number(cuerpo.stock)) || Number(cuerpo.stock) < 0) throw new ErrorDemo('El stock debe ser un entero mayor o igual a cero', 400);
+    }
+    if ('nombre' in cuerpo) premio.nombre = cuerpo.nombre.trim();
+    if ('descripcion' in cuerpo) premio.descripcion = cuerpo.descripcion.trim();
+    if ('costo' in cuerpo) premio.costo = Number(cuerpo.costo);
+    if ('stock' in cuerpo) premio.stock = Number(cuerpo.stock);
+    return exito(premio);
   }
 
   if (ruta === '/tachos' && metodo === 'GET') return exito(tachos);

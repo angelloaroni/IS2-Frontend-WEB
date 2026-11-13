@@ -22,6 +22,6 @@ export const METRICAS = {
 export const COLOR_MATERIAL = {
   plastico: '#2a78d6',
   'papel/carton': '#eb6834',
-  organicos: '#1baf7a'
+  vidrio: '#1baf7a'
 };
 export const COLOR_OTROS = '#9ca3af';

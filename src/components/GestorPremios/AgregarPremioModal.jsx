@@ -86,6 +86,8 @@ export default function AgregarPremioModal({ onClose, onSave }) {
               <input
                 type="number"
                 required
+                min="1"
+                step="any"
                 placeholder="600"
                 value={formData.puntos}
                 onChange={(e) => setFormData({ ...formData, puntos: e.target.value })}
@@ -97,6 +99,8 @@ export default function AgregarPremioModal({ onClose, onSave }) {
               <input
                 type="number"
                 required
+                min="0"
+                step="1"
                 placeholder="40"
                 value={formData.stock}
                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
